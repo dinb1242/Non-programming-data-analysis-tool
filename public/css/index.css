@@ -1,0 +1,17 @@
+.MainContainer {
+    position: relative;
+}
+
+.PlotlyContainer {
+    position: relative;
+    width: 600px;
+    height: 400px;
+    border: 1px solid red;
+}
+
+.WeatherTest {
+    position: relative;
+    width: 600px;
+    height: 400px;
+    border: 1px solid red;
+}

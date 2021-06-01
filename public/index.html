@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plotly.js Test</title>
+
+    <link rel="stylesheet" href="/css/index.css">
+
+    <!-- Plotly -->
+    <script src="https://cdn.plot.ly/plotly-1.58.4.min.js"></script>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/danfojs@0.2.4/lib/bundle.min.js"></script>
+</head>
+
+<body>
+    <div class="MainContainer">
+        <h1>Plotly.js Test</h1>
+
+        <!-- Plotly.js Test -->
+        <div class="PlotlyContainer" id="plotly_test"></div>
+        <div id="table"></div>
+<div id="plot"></div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // Plotly Plot test
+        let graphDiv = document.getElementById("plotly_test");
+        Plotly.newPlot(graphDiv, [{
+            x: [1, 2, 3, 4, 5],
+            y: [1, 2, 4, 8, 16],
+            margin: { t: 0 }
+        }]);
+
+        let df_sum;
+    dfd.read_csv('/datasets/weather_2018-2020.csv');
+    </script>
+</body>
+
+</html>
