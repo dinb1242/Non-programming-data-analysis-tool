@@ -1,18 +1,19 @@
 // Import express module to create a server.
 const express = require("express");
 
+// Import Router
+const indexRouter = require("./routes/index");
+
 // Use express instance as a variable
 const app = express();
-const port = 5000;
+const port = 4000;
 
-// Use static for public directory
-// And the server will find /public/index.html basically
-app.use(express.static(__dirname + "/public"));
+// Use ejs
+app.set("view engine", "ejs");
+app.use(express.static(__dirname + "/public")); // static resources
 
-// render /public/index.html
-app.get("/", (req, res) => {
-    res.render("index.html");
-})
+// Routes index page by using indexRouter Instance
+app.use("/", indexRouter);
 
 app.listen(port, ()=>{
     console.log(`Server is listening on ${port}`);

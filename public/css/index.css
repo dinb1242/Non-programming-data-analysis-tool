@@ -1,17 +1,26 @@
 .MainContainer {
-    position: relative;
+    position: absolute;
+    display: flex;
+    flex-direction: row;
 }
 
+/* Danfo CSS */
+.DanfoContainer {
+    position: relative;
+    width: 50vw;
+    border: 1px solid blue;
+}
+
+/* Plotly CSS */
 .PlotlyContainer {
     position: relative;
-    width: 600px;
-    height: 400px;
+    width: 50vw;
     border: 1px solid red;
 }
 
-.WeatherTest {
+.PlotlyGraph {
     position: relative;
     width: 600px;
-    height: 400px;
-    border: 1px solid red;
+    height: 300px;
+    border: 1px solid green;
 }
