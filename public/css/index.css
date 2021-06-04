@@ -1,10 +1,10 @@
-/* .MainContainer {
+.MainContainer {
     position: absolute;
     display: flex;
     flex-direction: row;
     width: 100vw;
     height: 100vh;
-} */
+}
 
 *, body		{ font-family: 'NanumSquare', sans-serif; }
 /* Danfo CSS */
