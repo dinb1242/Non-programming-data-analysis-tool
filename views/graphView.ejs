@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plotly.js Test</title>
+
+    <link rel="stylesheet" href="/css/index.css">
+
+    <!-- Jquery -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+    <!-- Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-1.58.4.min.js"></script>
+
+    <!-- Danfo.js -->
+    <script src="https://cdn.jsdelivr.net/npm/danfojs@0.2.4/lib/bundle.min.js"></script>
+
+    <!-- Tensorflow.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@2.0.0/dist/tf.min.js"></script>
+
+</head>
+
+<body>
+    <div class="MainContainer">
+
+        <!-- DataFrame's table will be shown -->
+        <div class="DanfoContainer">
+            <h1>Danfo.js Test</h1>
+
+            <!-- DataFrame Controls -->
+            <div id="select_box_x_col" style="display: inline;">
+                X Column : <select id="select_x_col" onchange="onDataFrameChange(this, 0);">
+                    <option value="none">컬럼을 선택하세요.</option>
+                    <!-- Option tag will be shown by processing Javascript function -->
+                </select>
+            </div>
+
+            <div id="select_box_y_col" style="display: inline">
+                Y Column : <select id="select_y_col" onchange="onDataFrameChange(this, 1);">
+                    <option value="none">컬럼을 선택하세요.</option>
+                    <!-- Option tag will be shown by processing Javascript function -->
+                </select>
+            </div>
+
+            <button onclick="makeDataFrame();">선택</button>
+            <button onclick="resetDataFrame();">초기화</button>
+
+            <div id="danfo_dataframe"></div>
+        </div>
+
+        <!-- Plotly's Graph will be shown -->
+        <div class="PlotlyContainer">
+            <h1>Plotly.js Test</h1>
+
+            <!-- Graph Controls -->
+            <select onchange="onGraphChange(this);" id="graphSelect">
+                <option value="lines" selected>선 그래프</option>
+                <option value="markers">산점도 그래프</option>
+                <option value="box">박스 그래프</option>
+                <option value="histogram">히스토그램</option>
+            </select>
+            <div class="PlotlyGraph" id="plotly_graph"></div>
+            <button onclick="makeSLGraphWithTrendline();">추세선 그리기 (선, 산점도만 해당)</button>
+            <button onclick="makeScatterAndLineGraph();">추세선 초기화</button>
+            <div id="trendline_value">
+                <p id="trendline_x"></p>
+                <p id="trendline_y"></p>
+                <p id="trendline_equation"></p>
+                <p id="r_squared"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        ////////////////////////////////////////////////////////
+        // Variables    
+        ////////////////////////////////////////////////////////
+        let dataset_path = "";
+
+        let graphType;
+
+        let df; // DataFrame will be contained
+        let count = 0;
+
+        let dfXCol;
+        let dfYCol;
+        let dfXColData;
+        let dfYColData;
+
+        ////////////////////////////////////////////////////////
+        // Page Initialize
+        ////////////////////////////////////////////////////////
+        $(document).ready(function () {
+            // Initialize the graph
+            $("#graphSelect").find("option").eq(0).prop("selected", true);
+            graphType = "lines";
+            makeScatterAndLineGraph(graphType);
+
+            //Initialize the DataFrame
+            // Danfo script and will be shown on html
+            if ("<%=dataset_id%>" == "0") {
+                dataset_path = "https://raw.githubusercontent.com/dinb1242/datasets/master/weather-in-jeju.csv";
+            } else {
+                dataset_path = "https://raw.githubusercontent.com/dinb1242/datasets/master/weather-issue-data.csv";
+            }
+            try {
+                dfd.read_csv(dataset_path)
+                    .then((result) => {
+                        initializeDf(result);
+                    })
+            } catch (err) {
+                console.log(`데이터셋을 불러오는 중 오류가 발생했습니다.\n${err}`);
+            }
+        })
+
+        function initializeDf(result) {
+            // Dataframe init and print on html
+            df = result;
+            df.plot("danfo_dataframe").table({ layout: { height: 800 } });
+
+            // Create select tag's options using columns of DataFrame
+            let selectXCol = document.getElementById("select_x_col");
+            let selectYCol = document.getElementById("select_y_col");
+            let selectOption;
+
+            dfCols = df.columns;
+            dfCols.forEach((element, idx) => {
+                selectOption = document.createElement("option");
+                selectOption.setAttribute("value", element);
+                selectOption.innerHTML = element;
+                selectXCol.appendChild(selectOption);
+
+                selectOption = document.createElement("option");
+                selectOption.setAttribute("value", element);
+                selectOption.innerHTML = element;
+                selectYCol.appendChild(selectOption);
+            });
+        }
+
+        ////////////////////////////////////////////////////////
+        // Logic function
+        ////////////////////////////////////////////////////////
+
+        // 2-dim array to 1-dim array
+        function reshapeTo1d(arr) {
+            let twoDimArr = []
+            arr.forEach(element => {
+                twoDimArr.push(element[0])
+            })
+
+            return twoDimArr;
+        }
+
+        // Number Range Function
+        function range(start, end) {
+            let arr = [];
+            let length = end - start;
+
+            for (var i = 0; i <= length; i++) {
+                arr[i] = start;
+                start++;
+            }
+
+            return arr;
+        }
+
+        function calcRSquared(yTrue, yPred) {
+            // yTure = dfYColData
+            // yPred = trendY
+            let tensorYTrue = tf.tensor1d(yTrue);
+            let tensorYPred = tf.tensor1d(yPred);
+
+            let sst = tensorYTrue.sub(tensorYTrue.mean()).square().sum()
+            let sse = tensorYPred.sub(tensorYTrue.mean()).square().sum()
+            let ssr = tensorYTrue.sub(tensorYPred).square().sum()
+
+            let r2 = 1 - Array.from(ssr.div(sst).dataSync())[0]
+
+            return r2;
+        }
+
+        // calcLSM Calculus for Trendline
+        // it returns tensor array
+        function calcLSM(xArr, yArr) {
+            let tensorX = tf.tensor1d(xArr);
+            let tensorY = tf.tensor1d(yArr);
+
+            // Get Average
+            let xMean = tensorX.mean();
+            let yMean = tensorY.mean();
+
+            // Get Coefficient and Intercept
+            let divisor = tensorX.sub(xMean).mul(tensorY.sub(yMean)).sum()
+            let dividend = tensorX.sub(xMean).square().sum();
+
+            let coef = divisor.div(dividend);
+            let intercept = yMean.sub(xMean.mul(coef));
+
+            return [coef, intercept];
+        }
+
+        function rSquared() {
+            let sse;
+            let ssr;
+            let sst;
+        }
+
+        // Set new Graph
+        function makeScatterAndLineGraph() {
+            let trace1 = {
+                x: dfXColData,
+                y: dfYColData,
+                mode: graphType
+            }
+
+            let layout = {
+                title: "Test Title",
+                xaxis: {
+                    title: dfXCol
+                },
+                yaxis: {
+                    title: dfYCol
+                }
+            }
+
+            let config = {
+                responsive: true,
+            }
+
+            let data = [trace1];
+
+            Plotly.newPlot("plotly_graph", data, layout, config);
+        }
+
+        // Scatter or Line Graph with Tendline()
+        function makeSLGraphWithTrendline() {
+            // Equation, tensor type
+            let trendEquation = calcLSM(dfXColData, dfYColData);
+            console.log(trendEquation[0].print(), trendEquation[1].print());
+
+            let minX = Array.from(tf.tensor1d(dfXColData).min().dataSync())[0];
+            let maxX = Array.from(tf.tensor1d(dfXColData).max().dataSync())[0];
+
+            // X = dfXColData
+            let trendY = Array.from(trendEquation[0].mul(dfXColData).add(trendEquation[1]).dataSync());
+
+            let rSquared = Math.ceil(calcRSquared(dfYColData, trendY) * 10000) / 10000;
+
+            // Get rounded numbers for quation
+            let equationX = Math.ceil(Array.from(trendEquation[0].dataSync())[0] * 100) / 100;
+            let equationY = Math.ceil(Array.from(trendEquation[1].dataSync())[0] * 100) / 100;
+
+            // Show trendline's x and y value on html
+            let pTagtrendX = document.getElementById("trendline_x");
+            let pTagtrendY = document.getElementById("trendline_y");
+            let pTagtrendEquation = document.getElementById("trendline_equation");
+            let pTagRSquared = document.getElementById("r_squared");
+            pTagtrendX.innerHTML = `x : ${equationX}`;
+            pTagtrendY.innerHTML = `y : ${equationY}`;
+            pTagtrendEquation.innerHTML = `Equation : ${equationX} * x + ${equationY}`;
+            pTagRSquared.innerHTML = `R-Squared : ${rSquared} (about ${rSquared * 100}%)`
+
+            let trace1 = {
+                x: dfXColData,
+                y: dfYColData,
+                mode: graphType
+            }
+
+            let trendLine = {
+                x: dfXColData,
+                y: trendY,
+                mode: "lines"
+            }
+
+            let layout = {
+                title: "Test Title",
+                xaxis: {
+                    title: dfXCol
+                },
+                yaxis: {
+                    title: dfYCol
+                }
+            }
+
+            let data = [trace1, trendLine];
+
+            Plotly.newPlot("plotly_graph", data, layout)
+        }
+
+        function makeBoxGraph() {
+            // A box graph that can remove a point which is clicked.
+            let trace0 = {
+                y: dfYColData,
+                type: "box"
+            }
+
+            let layout = {
+                hovermode: "closest",
+                title: "Click Event Test",
+                yaxis: {
+                    title: dfYCol
+                }
+            }
+
+            let data = [trace0]
+
+            Plotly.newPlot("plotly_graph", data, layout);
+
+            // Create a click and elete data-point event on box plot
+            var boxGraphElement = document.getElementById("plotly_graph");
+
+            boxGraphElement.on("plotly_click", (data) => {
+                onBoxGraphDataDelete(data);
+            })
+        }
+
+        // Set new DataFrame
+        async function makeDataFrame() {
+            let isSelectBoxXColVisible = $("#select_box_x_col").is(":visible");
+
+            // When Scatter and Line Plot
+            if (isSelectBoxXColVisible) {
+                if (!dfXCol || !dfYCol || dfXCol == "none" || dfYCol == "none") {
+                    alert("모든 컬럼을 선택하세요.")
+                } else {
+                    df.loc({ columns: [dfXCol, dfYCol] }).plot("danfo_dataframe").table();
+                    dfXColData = reshapeTo1d(df.loc({ columns: [dfXCol] }).values)
+                    dfYColData = reshapeTo1d(df.loc({ columns: [dfYCol] }).values)
+
+                    await makeScatterAndLineGraph()
+                }
+            } else {
+                if (!dfYCol || dfYCol == "none") {
+                    alert("컬럼을 선택하세요.")
+                } else {
+                    dfYColData = reshapeTo1d(df.loc({ columns: [dfYCol] }).values)
+                    df.loc({ columns: [dfYCol] }).plot("danfo_dataframe").table();
+                    await makeBoxGraph()
+                }
+            }
+        }
+
+        // Reset Graph
+        function resetGraph() {
+            Plotly.newPlot("plotly_graph", [{
+                x: null,
+                y: null,
+                mode: graphType
+            }]);
+        }
+
+        // Reset DataFrame
+        function resetDataFrame() {
+            df.plot("danfo_dataframe").table();
+            resetGraph(); // Grpah will be reset too.
+        }
+
+        ////////////////////////////////////////////////////////
+        // Handler functions
+        ////////////////////////////////////////////////////////
+
+        // If a point on box graph is clicked
+        async function onBoxGraphDataDelete(data) {
+            let pts = '';
+            let dataTrueIdx;
+
+            // When click only data-point
+            if (data.points.length == 1) {
+                // pts = "x : " + data.points[0].x + "\ny : " + data.points[0].y;
+                pts = "y : " + data.points[0].y;
+                if (confirm("삭제 하시겠습니까?\n\n삭제될 데이터 :\n" + pts)) {
+                    // Delete data-point
+                    dataTrueIdx = reshapeTo1d(df.loc({ columns: [dfYCol] }).eq(data.points[0].y).data).indexOf(true)
+                    df.drop({ index: [dataTrueIdx], axis: 0, inplace: true }); // Data Drop
+                    df.reset_index({ inplace: true });
+
+                    // Reload DataFrame and box plot
+                    await makeDataFrame();
+                } else {
+                    return;
+                }
+            } else {
+                console.log("데이터의 집합입니다.");
+            }
+        }
+
+        // When select box of graph is changed
+        function onGraphChange(e) {
+            graphType = e.value;
+            if (graphType == "lines" || graphType == "markers") {
+                resetGraph();
+                $("#select_box_x_col").show();
+                makeScatterAndLineGraph();
+            } else if (graphType == "box") {
+                resetGraph();
+                // If graphType is not "lines" or "markers"
+                // X columns must be deleted.
+                dfXCol = null; // As X Columns select box will be deleted, the data must be deleted.
+                $("#select_x_col").find("option").eq(0).prop("selected", true); // When X column select box appeared, the default value must be initialized.
+                $("#select_box_x_col").hide();
+            }
+        }
+
+        function onDataFrameChange(e, selectBoxIdx) {
+            // 0: first select box
+            // 1: second select box
+            selectBoxIdx == 0 ? dfXCol = e.value : dfYCol = e.value;
+            console.log(dfXCol, dfYCol);
+        }
+
+            ////////////////////////////////////////////////////////
+            // Table Event Handler
+            ////////////////////////////////////////////////////////
+    </script>
+</body>
+
+</html>

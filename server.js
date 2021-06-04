@@ -1,8 +1,11 @@
 // Import express module to create a server.
 const express = require("express");
 
+// body-parser
+const bodyParser = require("body-parser");
+
 // Import Router
-const indexRouter = require("./routes/index");
+const indexRouter = require("./routes");
 
 // Use express instance as a variable
 const app = express();
