@@ -1,11 +1,12 @@
-.MainContainer {
+/* .MainContainer {
     position: absolute;
     display: flex;
     flex-direction: row;
     width: 100vw;
     height: 100vh;
-}
+} */
 
+*, body		{ font-family: 'NanumSquare', sans-serif; }
 /* Danfo CSS */
 .DanfoContainer {
     position: relative;
@@ -25,4 +26,59 @@
     width: 600px;
     height: 300px;
     border: 1px solid green;
+}
+
+.topBack {
+    color: #fff;
+    position: relative;
+    background: url('/images/background.jpg')
+}
+
+
+.topBack:before{
+    content: '';
+    position: absolute;
+    z-index: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.35);
+    top: 0;
+    left: 0;
+}
+.topBack > .ui.container {
+    position: relative;
+    z-index: 1;
+    height: 100vh;
+    margin: 0 auto;
+    min-height: 600px;
+    -webkit-box-align: center;
+    -webkit-align-items: center;
+    -ms-flex-align: center;
+    align-items: center;
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-pack: center;
+    -webkit-justify-content: center;
+    -ms-flex-pack: center;
+    justify-content: center;
+
+}
+
+.topBack > .ui.container > .textBox {
+    text-align: center;
+}
+
+.topBack > .ui.container > .textBox > p{
+    color: #fff;
+    font-size: 20px;
+    font-weight: bold;
+}
+.topBack > .ui.container > .textBox > p{
+
+}
+
+.yt{
+    color: #ffff7f !important;
 }
