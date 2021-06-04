@@ -31,14 +31,14 @@
             <h1>Danfo.js Test</h1>
 
             <!-- DataFrame Controls -->
-            <div id="select_box_x_col" style="display: inline;">
+            <div id="sb_x_col" style="display: inline;">
                 X Column : <select id="select_x_col" onchange="onDataFrameChange(this, 0);">
                     <option value="none">컬럼을 선택하세요.</option>
                     <!-- Option tag will be shown by processing Javascript function -->
                 </select>
             </div>
 
-            <div id="select_box_y_col" style="display: inline">
+            <div id="sb_y_col" style="display: inline">
                 Y Column : <select id="select_y_col" onchange="onDataFrameChange(this, 1);">
                     <option value="none">컬럼을 선택하세요.</option>
                     <!-- Option tag will be shown by processing Javascript function -->
@@ -47,6 +47,8 @@
 
             <button onclick="makeDataFrame();">선택</button>
             <button onclick="resetDataFrame();">초기화</button>
+            <input type="checkbox" id="cb_is_grouped" onchange="onGroupedCheckBoxChange(this);" />
+            <label id="lb_is_grouped" for="cb_is_grouped">X축 범주 여부</label>
 
             <div id="danfo_dataframe"></div>
         </div>
@@ -56,11 +58,11 @@
             <h1>Plotly.js Test</h1>
 
             <!-- Graph Controls -->
-            <select onchange="onGraphChange(this);" id="graphSelect">
+            <select onchange="onGraphChange(this);" id="sb_graph_select">
                 <option value="lines" selected>선 그래프</option>
                 <option value="markers">산점도 그래프</option>
                 <option value="box">박스 그래프</option>
-                <option value="histogram">히스토그램</option>
+                <option value="bar">막대 그래프</option>
             </select>
             <div class="PlotlyGraph" id="plotly_graph"></div>
             <button onclick="makeSLGraphWithTrendline();">추세선 그리기 (선, 산점도만 해당)</button>
@@ -91,12 +93,16 @@
         let dfXColData;
         let dfYColData;
 
+        let isGrouped = 0;
+
         ////////////////////////////////////////////////////////
         // Page Initialize
         ////////////////////////////////////////////////////////
         $(document).ready(function () {
             // Initialize the graph
-            $("#graphSelect").find("option").eq(0).prop("selected", true);
+            $("#sb_graph_select").find("option").eq(0).prop("selected", true);
+            $("input:checkbox[id='cb_is_grouped']").prop("checked", false);
+            $("#cb_is_grouped, #lb_is_grouped").hide();
             graphType = "lines";
             makeScatterAndLineGraph(graphType);
 
@@ -318,22 +324,67 @@
             })
         }
 
+        function makeBarGraph() {
+            let trace0 = {
+                    x: dfXColData,
+                    y: dfYColData,
+                    type: "bar"
+            }
+            if (isGrouped) {
+                /*
+                    The the check box is checked, the flow is:
+                        1. Extract unique data in X (It will be label data) -> uniqueXData Variable
+                        2. Extract Max number in Y data using each unique data of X -> maxYData Array
+                */
+                let uniqueXData = df[dfXCol].unique().values;
+                let maxYData = [];
+                uniqueXData.forEach(label => {
+                    console.log(`Current Label : ${label}`);
+                    console.log(Math.max.apply(null, df.query({ column: dfXCol, is: "==", to: label })[dfYCol].values))
+                    maxYData.push(Math.max.apply(null, df.query({ column: dfXCol, is: "==", to: label })[dfYCol].values));
+                })
+
+                trace0.x = uniqueXData;
+                trace0.y = maxYData;
+
+                console.log(trace0.x, trace0.y);
+            }
+            let data = [trace0];
+
+            let layout = {
+                xaxis: {
+                    title: dfXCol
+                },
+                yaxis: {
+                    title: dfYCol
+                }
+            }
+            Plotly.newPlot("plotly_graph", data, layout);
+        }
+
         // Set new DataFrame
         async function makeDataFrame() {
-            let isSelectBoxXColVisible = $("#select_box_x_col").is(":visible");
+            let isSelectBoxXColVisible = $("#sb_x_col").is(":visible");
 
-            // When Scatter and Line Plot
+            // When X col and Y col are activated.
             if (isSelectBoxXColVisible) {
                 if (!dfXCol || !dfYCol || dfXCol == "none" || dfYCol == "none") {
                     alert("모든 컬럼을 선택하세요.")
                 } else {
-                    df.loc({ columns: [dfXCol, dfYCol] }).plot("danfo_dataframe").table();
+                    df.loc({ columns: [dfXCol, dfYCol] }).plot("danfo_dataframe").table(); // Reload DataFrame
+                    // Set Dataframe's data
                     dfXColData = reshapeTo1d(df.loc({ columns: [dfXCol] }).values)
                     dfYColData = reshapeTo1d(df.loc({ columns: [dfYCol] }).values)
 
-                    await makeScatterAndLineGraph()
+                    // Re-draw a graph according to the graph type
+                    if (graphType == "lines" || graphType == "markers") {
+                        await makeScatterAndLineGraph();
+                    }
+                    else if (graphType == "bar") {
+                        await makeBarGraph();
+                    }
                 }
-            } else {
+            } else { // When Only one Columns
                 if (!dfYCol || dfYCol == "none") {
                     alert("컬럼을 선택하세요.")
                 } else {
@@ -359,9 +410,28 @@
             resetGraph(); // Grpah will be reset too.
         }
 
+        // Hide X Col
+        function hideDfXCol() {
+            dfXCol = null; // As X Columns select box will be deleted, the data must be deleted.
+            dfXColData = null;
+            $("#select_x_col").find("option").eq(0).prop("selected", true); // When X column select box appeared, the default value must be initialized.
+            $("#sb_x_col").hide();
+        }
+
+        function hideChIsGrouped() {
+            isGrouped = 0; // Initialize before being hidden
+            $("#cb_is_grouped, #lb_is_grouped").hide();
+        }
+
         ////////////////////////////////////////////////////////
         // Handler functions
         ////////////////////////////////////////////////////////
+
+        // when selected bar graph, is Checkbox checked or not
+        function onGroupedCheckBoxChange(e) {
+            isGrouped = $("#cb_is_grouped").is(":checked");
+            makeBarGraph();
+        }
 
         // If a point on box graph is clicked
         async function onBoxGraphDataDelete(data) {
@@ -393,15 +463,20 @@
             graphType = e.value;
             if (graphType == "lines" || graphType == "markers") {
                 resetGraph();
-                $("#select_box_x_col").show();
+                $("#sb_x_col").show();
+                hideChIsGrouped();
                 makeScatterAndLineGraph();
             } else if (graphType == "box") {
                 resetGraph();
                 // If graphType is not "lines" or "markers"
-                // X columns must be deleted.
-                dfXCol = null; // As X Columns select box will be deleted, the data must be deleted.
-                $("#select_x_col").find("option").eq(0).prop("selected", true); // When X column select box appeared, the default value must be initialized.
-                $("#select_box_x_col").hide();
+                // X column and its data must be deleted.
+                hideDfXCol();
+                hideChIsGrouped();
+            } else if (graphType == "bar") {
+                resetGraph();
+                $("#sb_x_col").show();
+                $("#cb_is_grouped, #lb_is_grouped").show();
+                makeBarGraph();
             }
         }
 
