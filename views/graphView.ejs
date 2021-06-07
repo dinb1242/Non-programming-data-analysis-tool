@@ -43,7 +43,7 @@
                     데이터 조작 공간
                 </h1>
                 <form class="ui fluid form">
-                    <div class="cb_is_grouped_box" style="display: inline-block; text-align: left;">
+                    <div class="cb_is_grouped_box" style="text-align: left;">
                         <input type="checkbox" id="cb_is_grouped" onchange="onGroupedCheckBoxChange(this);" />
                         <label id="lb_is_grouped" for="cb_is_grouped">X축 기준 집계 (Aggregate)</label>
                         <br />
@@ -683,14 +683,14 @@
                 spanY2ColText.innerText = "Y Column";
                 hideDfY2Col();
                 $("#sb_x_col").show();
-                $(".cb_is_grouped_box").show();
+                $(".cb_is_grouped_box").css('display','inline-block');
                 makeBarGraph();
             } else if (graphType == "combo") {
                 resetGraph();
                 spanY2ColText.innerText = "Y Column (for Bar Plot)"
                 $("#sb_y2_col").show();
                 $("#sb_x_col").show();
-                $(".cb_is_grouped_box").show();
+                $(".cb_is_grouped_box").css('display','inline-block');
             }
 
         }
