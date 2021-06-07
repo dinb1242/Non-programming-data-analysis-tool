@@ -9,8 +9,10 @@
 *, body		{ font-family: 'NanumSquare', sans-serif; }
 /* Danfo CSS */
 .DanfoContainer {
+    padding: 20px;
+    text-align: center;
     position: relative;
-    width: 50vw;
+    width: 40vw;
     border: 1px solid blue;
 }
 
@@ -44,6 +46,10 @@
     background-color: rgba(0, 0, 0, 0.35);
     top: 0;
     left: 0;
+}
+.topBack > .ui.container.expPage{
+    height: 15vh !important;
+    min-height: 200px;
 }
 .topBack > .ui.container {
     position: relative;
