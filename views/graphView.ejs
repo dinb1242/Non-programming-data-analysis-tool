@@ -38,12 +38,11 @@
         </div>
         <!-- DataFrame's table will be shown -->
         <div class="Container_layout">
-
             <div class="DanfoContainer">
                 <h1 class="">데이터 조작 공간</h1>
 
                 <!-- DataFrame Controls -->
-                <form class="ui fluid form" style="position: relative;">
+                <form class="ui fluid form">
 
 
                     <div id="sb_x_col" style="display: inline-block; text-align: left;">
@@ -74,10 +73,12 @@
                             class="check circle white icon"></i></button>
                     <button type="button" class="ui icon button red" onclick="resetDataFrame();"><i
                             class="trash alternate outline white icon"></i></button>
-                    <div class="cb_is_grouped_box">
-                        <input type="checkbox" id="cb_is_grouped" onchange="onGroupedCheckBoxChange(this);" />
-                        <label id="lb_is_grouped" for="cb_is_grouped">X축 범주 여부</label>
-                    </div>
+                    <input type="checkbox" id="cb_is_grouped" onchange="onGroupedCheckBoxChange(this);" />
+                    <label id="lb_is_grouped" for="cb_is_grouped">X축 기준 집계 (Aggregate)</label>
+                    <select id="select_aggregate_method" onchange="onAggregateCheckBoxChange();">
+                        <option value="mean">평균</option>
+                        <option value="max">최대값</option>
+                    </select>
                 </form>
                 <div id="danfo_dataframe"></div>
             </div>
@@ -126,6 +127,8 @@
         let dfYColData;
         let dfY2ColData;
 
+        let aggregateMethod = "";
+
         let isGrouped = 0;
 
         ////////////////////////////////////////////////////////
@@ -136,8 +139,10 @@
             $("#sb_graph_select").find("option").eq(0).prop("selected", true);
             $("input:checkbox[id='cb_is_grouped']").prop("checked", false);
             $("#cb_is_grouped, #lb_is_grouped").hide();
+            $("#select_aggregate_method").hide();
             hideDfY2Col();
             graphType = "lines";
+            aggregateMethod = "mean";
             makeScatterAndLineGraph(graphType);
 
             //Initialize the DataFrame
@@ -165,6 +170,7 @@
             // Create select tag's options using columns of DataFrame
             let selectXCol = document.getElementById("select_x_col");
             let selectYCol = document.getElementById("select_y_col");
+            let selectY2Col = document.getElementById("select_y2_col");
             let selectOption;
 
             dfCols = df.columns;
@@ -178,6 +184,11 @@
                 selectOption.setAttribute("value", element);
                 selectOption.innerHTML = element;
                 selectYCol.appendChild(selectOption);
+
+                selectOption = document.createElement("option");
+                selectOption.setAttribute("value", element);
+                selectOption.innerHTML = element;
+                selectY2Col.appendChild(selectOption);
             });
         }
 
@@ -401,11 +412,18 @@
         // Developing...
         function makeComboGraph() {
             // Implement 
-            let trace0 = {
+            let traceForBar = {
                 x: dfXColData,
                 y: dfYColData,
                 type: "bar"
             }
+
+            let traceForLine = {
+                x: dfXColData,
+                y: dfY2ColData,
+                type: "line"
+            }
+
             if (isGrouped) {
                 /*
                     The the check box is checked, the flow is:
@@ -413,18 +431,23 @@
                         2. Extract Max number in Y data using each unique data of X -> maxYData Array
                 */
                 let uniqueXData = df[dfXCol].unique().values;
-                let maxYDataForLine = [];
                 let maxYDataForBar = [];
+                let maxYDataForLine = [];
                 uniqueXData.forEach(label => {
                     maxYDataForBar.push(Math.max.apply(null, df.query({ column: dfXCol, is: "==", to: label })[dfYCol].values));
+                    maxYDataForLine.push(Math.max.apply(null, df.query({ column: dfXCol, is: "==", to: label })[dfY2Col].values));
                 })
 
-                trace0.x = uniqueXData;
-                trace0.y = maxYData;
+                traceForBar.x = uniqueXData;
+                traceForBar.y = maxYDataForBar;
 
-                console.log(trace0.x, trace0.y);
+                traceForLine.x = uniqueXData;
+                traceForLine.y = maxYDataForLine;
+
+                console.log(traceForBar.x, traceForBar.y);
+                console.log(traceForLine.x, traceForLine.y);
             }
-            let data = [trace0];
+            let data = [traceForBar, traceForLine];
 
             let layout = {
                 xaxis: {
@@ -445,32 +468,35 @@
 
             // When X col and Y col are activated.
             if (isSelectBoxXColVisible) {
-                if (!dfXCol || !dfYCol || dfXCol == "none" || dfYCol == "none") {
-                    alert("모든 컬럼을 선택하세요.")
-                } else if (!dfXCol || !dfYCol || !dfY2Col || dfXCol == "none" || dfYCol == "none" || dfY2Col == "none") {
-                    alert("모든 컬럼을 선택하세요.")
-                } else {
-                    // If selected Combo Box Graph
-                    if (graphType == "combo") {
+                if (graphType == "combo") {
+                    if (!dfXCol || !dfYCol || !dfY2Col || dfXCol == "none" || dfYCol == "none" || dfY2Col == "none") {
+                        alert("모든 컬럼을 선택하세요.")
+                        return false;
+                    } else {
                         df.loc({ columns: [dfXCol, dfYCol, dfY2Col] }).plot("danfo_dataframe").table(); // Reload DataFrame
                         dfXColData = reshapeTo1d(df.loc({ columns: [dfXCol] }).values)
                         dfYColData = reshapeTo1d(df.loc({ columns: [dfYCol] }).values)
-                        dfY2ColData = reshapeTo1d(df.loc({ columns: [dfYCol] }).values)
+                        dfY2ColData = reshapeTo1d(df.loc({ columns: [dfY2Col] }).values)
+                    }
+                } else {
+                    if (!dfXCol || !dfYCol || dfXCol == "none" || dfYCol == "none") {
+                        alert("모든 컬럼을 선택하세요.")
+                        return false;
                     } else {
                         df.loc({ columns: [dfXCol, dfYCol] }).plot("danfo_dataframe").table(); // Reload DataFrame
                         // Set Dataframe's data
                         dfXColData = reshapeTo1d(df.loc({ columns: [dfXCol] }).values)
                         dfYColData = reshapeTo1d(df.loc({ columns: [dfYCol] }).values)
                     }
-                    // Re-draw a graph according to the graph type
-                    if (graphType == "lines" || graphType == "markers") {
-                        await makeScatterAndLineGraph();
-                    }
-                    else if (graphType == "bar") {
-                        await makeBarGraph();
-                    } else if (graphType == "combo") {
-                        await makeComboGraph();
-                    }
+                }
+                // Re-draw a graph according to the graph type
+                if (graphType == "lines" || graphType == "markers") {
+                    await makeScatterAndLineGraph();
+                }
+                else if (graphType == "bar") {
+                    await makeBarGraph();
+                } else if (graphType == "combo") {
+                    await makeComboGraph();
                 }
             } else { // When Only one Columns
                 if (!dfYCol || dfYCol == "none") {
@@ -525,7 +551,20 @@
         // when selected bar graph, is Checkbox checked or not
         function onGroupedCheckBoxChange(e) {
             isGrouped = $("#cb_is_grouped").is(":checked");
-            makeBarGraph();
+            if (isGrouped) {
+                $("#select_aggregate_method").show();
+            } else {
+                $("#select_aggregate_method").hide();
+            }
+            try {
+                makeBarGraph();
+            } catch (err) {
+                console.log("Columns are not defined.");
+            }
+        }
+
+        function onAggregateCheckBoxChange() {
+
         }
 
         // If a point on box graph is clicked
@@ -592,8 +631,11 @@
         function onDataFrameChange(e, selectBoxIdx) {
             // 0: first select box
             // 1: second select box
-            selectBoxIdx == 0 ? dfXCol = e.value : dfYCol = e.value;
-            if (selectBoxIdx == 2) {
+            if (selectBoxIdx == 0) {
+                dfXCol = e.value;
+            } else if (selectBoxIdx == 1) {
+                dfYCol = e.value;
+            } else if (selectBoxIdx == 2) {
                 dfY2Col = e.value;
             }
             console.log(dfXCol, dfYCol, dfY2Col);
