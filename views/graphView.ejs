@@ -37,55 +37,72 @@
             </div>
         </div>
         <!-- DataFrame's table will be shown -->
-        <div class="DanfoContainer">
-            <h1 class="">데이터 조작 공간</h1>
+        <div class="Container_layout">
 
-            <!-- DataFrame Controls -->
-            <form class="ui fluid form">
+            <div class="DanfoContainer">
+                <h1 class="">데이터 조작 공간</h1>
+
+                <!-- DataFrame Controls -->
+                <form class="ui fluid form" style="position: relative;">
 
 
-            <div id="sb_x_col" style="display: inline-block; text-align: left;">
-                X Column<select id="select_x_col" onchange="onDataFrameChange(this, 0);">
-                    <option value="none">컬럼을 선택하세요.</option>
-                    <!-- Option tag will be shown by processing Javascript function -->
-                </select>
+                    <div id="sb_x_col" style="display: inline-block; text-align: left;">
+                        X Column<select id="select_x_col" onchange="onDataFrameChange(this, 0);">
+                            <option value="none">컬럼을 선택하세요.</option>
+                            <!-- Option tag will be shown by processing Javascript function -->
+                        </select>
+                    </div>
+
+                    <div id="sb_y_col" style="display: inline-block; text-align: left;">
+                        <span id="span_y_col_text">Y Column : </span>
+                        <select id="select_y_col" onchange="onDataFrameChange(this, 1);">
+                            <option value="none">컬럼을 선택하세요.</option>
+                            <!-- Option tag will be shown by processing Javascript function -->
+                        </select>
+                    </div>
+
+                    <!-- Combo box second y column (will be used for line plot) -->
+                    <div id="sb_y2_col" style="display: inline-block; text-align: left;">
+                        <span id="span_y2_col_text">Y Column (for Line Plot) : </span>
+                        <select id="select_y2_col" onchange="onDataFrameChange(this, 2);">
+                            <option value="none">컬럼을 선택하세요.</option>
+                            <!-- Option tag will be shown by processing Javascript function -->
+                        </select>
+                    </div>
+
+                    <button type="button" class="ui icon button green" onclick="makeDataFrame();"><i
+                            class="check circle white icon"></i></button>
+                    <button type="button" class="ui icon button red" onclick="resetDataFrame();"><i
+                            class="trash alternate outline white icon"></i></button>
+                    <div class="cb_is_grouped_box">
+                        <input type="checkbox" id="cb_is_grouped" onchange="onGroupedCheckBoxChange(this);" />
+                        <label id="lb_is_grouped" for="cb_is_grouped">X축 범주 여부</label>
+                    </div>
+                </form>
+                <div id="danfo_dataframe"></div>
             </div>
 
-            <div id="sb_y_col" style="display: inline-block; text-align: left;">
-                Y Column<select id="select_y_col" onchange="onDataFrameChange(this, 1);">
-                    <option value="none">컬럼을 선택하세요.</option>
-                    <!-- Option tag will be shown by processing Javascript function -->
+            <!-- Plotly's Graph will be shown -->
+            <div class="PlotlyContainer">
+                <h1>Plotly.js Test</h1>
+
+                <!-- Graph Controls -->
+                <select onchange="onGraphChange(this);" id="sb_graph_select">
+                    <option value="lines" selected>선 그래프</option>
+                    <option value="markers">산점도 그래프</option>
+                    <option value="box">박스 그래프</option>
+                    <option value="bar">막대 그래프</option>
+                    <option value="combo">콤보 그래프</option>
                 </select>
-            </div>
-
-            <button class="ui icon button green" onclick="makeDataFrame();"><i class="check circle white icon"></i></button>
-            <button class="ui icon button red" onclick="resetDataFrame();"><i class="trash alternate outline white icon"></i></button>
-            <input type="checkbox" id="cb_is_grouped" onchange="onGroupedCheckBoxChange(this);" />
-            <label id="lb_is_grouped" for="cb_is_grouped">X축 범주 여부</label>
-            </form>
-            <div id="danfo_dataframe"></div>
-        </div>
-
-        <!-- Plotly's Graph will be shown -->
-        <div class="PlotlyContainer">
-            <h1>Plotly.js Test</h1>
-
-            <!-- Graph Controls -->
-            <select onchange="onGraphChange(this);" id="sb_graph_select">
-                <option value="lines" selected>선 그래프</option>
-                <option value="markers">산점도 그래프</option>
-                <option value="box">박스 그래프</option>
-                <option value="bar">막대 그래프</option>
-                <option value="combo">콤보 그래프</option>
-            </select>
-            <div class="PlotlyGraph" id="plotly_graph"></div>
-            <button onclick="makeSLGraphWithTrendline();">추세선 그리기 (선, 산점도만 해당)</button>
-            <button onclick="makeScatterAndLineGraph();">추세선 초기화</button>
-            <div id="trendline_value">
-                <p id="trendline_x"></p>
-                <p id="trendline_y"></p>
-                <p id="trendline_equation"></p>
-                <p id="r_squared"></p>
+                <div class="PlotlyGraph" id="plotly_graph"></div>
+                <button onclick="makeSLGraphWithTrendline();">추세선 그리기 (선, 산점도만 해당)</button>
+                <button onclick="makeScatterAndLineGraph();">추세선 초기화</button>
+                <div id="trendline_value">
+                    <p id="trendline_x"></p>
+                    <p id="trendline_y"></p>
+                    <p id="trendline_equation"></p>
+                    <p id="r_squared"></p>
+                </div>
             </div>
         </div>
     </div>
@@ -104,8 +121,10 @@
 
         let dfXCol;
         let dfYCol;
+        let dfY2Col;
         let dfXColData;
         let dfYColData;
+        let dfY2ColData;
 
         let isGrouped = 0;
 
@@ -117,6 +136,7 @@
             $("#sb_graph_select").find("option").eq(0).prop("selected", true);
             $("input:checkbox[id='cb_is_grouped']").prop("checked", false);
             $("#cb_is_grouped, #lb_is_grouped").hide();
+            hideDfY2Col();
             graphType = "lines";
             makeScatterAndLineGraph(graphType);
 
@@ -377,14 +397,14 @@
             }
             Plotly.newPlot("plotly_graph", data, layout);
         }
-        
+
         // Developing...
-        function makeComboGraph(){
+        function makeComboGraph() {
             // Implement 
             let trace0 = {
-                    x: dfXColData,
-                    y: dfYColData,
-                    type: "bar"
+                x: dfXColData,
+                y: dfYColData,
+                type: "bar"
             }
             if (isGrouped) {
                 /*
@@ -420,24 +440,36 @@
 
         // Set new DataFrame
         async function makeDataFrame() {
+
             let isSelectBoxXColVisible = $("#sb_x_col").is(":visible");
 
             // When X col and Y col are activated.
             if (isSelectBoxXColVisible) {
                 if (!dfXCol || !dfYCol || dfXCol == "none" || dfYCol == "none") {
                     alert("모든 컬럼을 선택하세요.")
+                } else if (!dfXCol || !dfYCol || !dfY2Col || dfXCol == "none" || dfYCol == "none" || dfY2Col == "none") {
+                    alert("모든 컬럼을 선택하세요.")
                 } else {
-                    df.loc({ columns: [dfXCol, dfYCol] }).plot("danfo_dataframe").table(); // Reload DataFrame
-                    // Set Dataframe's data
-                    dfXColData = reshapeTo1d(df.loc({ columns: [dfXCol] }).values)
-                    dfYColData = reshapeTo1d(df.loc({ columns: [dfYCol] }).values)
-
+                    // If selected Combo Box Graph
+                    if (graphType == "combo") {
+                        df.loc({ columns: [dfXCol, dfYCol, dfY2Col] }).plot("danfo_dataframe").table(); // Reload DataFrame
+                        dfXColData = reshapeTo1d(df.loc({ columns: [dfXCol] }).values)
+                        dfYColData = reshapeTo1d(df.loc({ columns: [dfYCol] }).values)
+                        dfY2ColData = reshapeTo1d(df.loc({ columns: [dfYCol] }).values)
+                    } else {
+                        df.loc({ columns: [dfXCol, dfYCol] }).plot("danfo_dataframe").table(); // Reload DataFrame
+                        // Set Dataframe's data
+                        dfXColData = reshapeTo1d(df.loc({ columns: [dfXCol] }).values)
+                        dfYColData = reshapeTo1d(df.loc({ columns: [dfYCol] }).values)
+                    }
                     // Re-draw a graph according to the graph type
                     if (graphType == "lines" || graphType == "markers") {
                         await makeScatterAndLineGraph();
                     }
                     else if (graphType == "bar") {
                         await makeBarGraph();
+                    } else if (graphType == "combo") {
+                        await makeComboGraph();
                     }
                 }
             } else { // When Only one Columns
@@ -472,6 +504,13 @@
             dfXColData = null;
             $("#select_x_col").find("option").eq(0).prop("selected", true); // When X column select box appeared, the default value must be initialized.
             $("#sb_x_col").hide();
+        }
+
+        function hideDfY2Col() {
+            dfY2Col = null;
+            dfY2ColData = null;
+            $("#select_y2_col").find("option").eq(0).prop("selected", true);
+            $("#sb_y2_col").hide();
         }
 
         function hideChIsGrouped() {
@@ -515,29 +554,38 @@
         }
 
         // When select box of graph is changed
+        let spanY2ColText = document.getElementById("span_y_col_text");
+
         function onGraphChange(e) {
             graphType = e.value;
             if (graphType == "lines" || graphType == "markers") {
                 resetGraph();
+                spanY2ColText.innerText = "Y Column";
                 $("#sb_x_col").show();
                 hideChIsGrouped();
+                hideDfY2Col();
                 makeScatterAndLineGraph();
             } else if (graphType == "box") {
                 resetGraph();
+                spanY2ColText.innerText = "Y Column";
                 // If graphType is not "lines" or "markers"
                 // X column and its data must be deleted.
                 hideDfXCol();
+                hideDfY2Col();
                 hideChIsGrouped();
             } else if (graphType == "bar") {
                 resetGraph();
+                spanY2ColText.innerText = "Y Column";
+                hideDfY2Col();
                 $("#sb_x_col").show();
                 $("#cb_is_grouped, #lb_is_grouped").show();
                 makeBarGraph();
             } else if (graphType == "combo") {
                 resetGraph();
+                spanY2ColText.innerText = "Y Column (for Bar Plot)"
+                $("#sb_y2_col").show();
                 $("#sb_x_col").show();
                 $("#cb_is_grouped, #lb_is_grouped").show();
-                makeComboGraph();
             }
         }
 
@@ -545,7 +593,10 @@
             // 0: first select box
             // 1: second select box
             selectBoxIdx == 0 ? dfXCol = e.value : dfYCol = e.value;
-            console.log(dfXCol, dfYCol);
+            if (selectBoxIdx == 2) {
+                dfY2Col = e.value;
+            }
+            console.log(dfXCol, dfYCol, dfY2Col);
         }
 
             ////////////////////////////////////////////////////////

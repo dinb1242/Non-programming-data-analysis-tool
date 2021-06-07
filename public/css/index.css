@@ -1,10 +1,10 @@
-.MainContainer {
+/* .MainContainer {
     position: absolute;
     display: flex;
     flex-direction: row;
     width: 100vw;
     height: 100vh;
-}
+} */
 
 *, body		{ font-family: 'NanumSquare', sans-serif; }
 /* Danfo CSS */
@@ -12,15 +12,26 @@
     padding: 20px;
     text-align: center;
     position: relative;
-    width: 40vw;
-    border: 1px solid blue;
+    flex: 0 0 50%;
+}
+
+.Container_layout {
+    display: flex;
+}
+
+
+
+
+.cb_is_grouped_box {
+    position: absolute;
+    right: 0;
+    top: 0;
 }
 
 /* Plotly CSS */
 .PlotlyContainer {
     position: relative;
-    width: 50vw;
-    border: 1px solid red;
+    flex: 0 0 50%;
 }
 
 .PlotlyGraph {
