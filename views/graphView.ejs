@@ -76,6 +76,7 @@
                 <option value="markers">산점도 그래프</option>
                 <option value="box">박스 그래프</option>
                 <option value="bar">막대 그래프</option>
+                <option value="combo">콤보 그래프</option>
             </select>
             <div class="PlotlyGraph" id="plotly_graph"></div>
             <button onclick="makeSLGraphWithTrendline();">추세선 그리기 (선, 산점도만 해당)</button>
@@ -243,7 +244,8 @@
                 },
                 yaxis: {
                     title: dfYCol
-                }
+                },
+                height: 400
             }
 
             let config = {
@@ -302,7 +304,8 @@
                 },
                 yaxis: {
                     title: dfYCol
-                }
+                },
+                height: 400
             }
 
             let data = [trace1, trendLine];
@@ -322,7 +325,8 @@
                 title: "Click Event Test",
                 yaxis: {
                     title: dfYCol
-                }
+                },
+                height: 400
             }
 
             let data = [trace0]
@@ -352,8 +356,6 @@
                 let uniqueXData = df[dfXCol].unique().values;
                 let maxYData = [];
                 uniqueXData.forEach(label => {
-                    console.log(`Current Label : ${label}`);
-                    console.log(Math.max.apply(null, df.query({ column: dfXCol, is: "==", to: label })[dfYCol].values))
                     maxYData.push(Math.max.apply(null, df.query({ column: dfXCol, is: "==", to: label })[dfYCol].values));
                 })
 
@@ -370,7 +372,48 @@
                 },
                 yaxis: {
                     title: dfYCol
-                }
+                },
+                height: 400
+            }
+            Plotly.newPlot("plotly_graph", data, layout);
+        }
+        
+        // Developing...
+        function makeComboGraph(){
+            // Implement 
+            let trace0 = {
+                    x: dfXColData,
+                    y: dfYColData,
+                    type: "bar"
+            }
+            if (isGrouped) {
+                /*
+                    The the check box is checked, the flow is:
+                        1. Extract unique data in X (It will be label data) -> uniqueXData Variable
+                        2. Extract Max number in Y data using each unique data of X -> maxYData Array
+                */
+                let uniqueXData = df[dfXCol].unique().values;
+                let maxYDataForLine = [];
+                let maxYDataForBar = [];
+                uniqueXData.forEach(label => {
+                    maxYDataForBar.push(Math.max.apply(null, df.query({ column: dfXCol, is: "==", to: label })[dfYCol].values));
+                })
+
+                trace0.x = uniqueXData;
+                trace0.y = maxYData;
+
+                console.log(trace0.x, trace0.y);
+            }
+            let data = [trace0];
+
+            let layout = {
+                xaxis: {
+                    title: dfXCol
+                },
+                yaxis: {
+                    title: dfYCol
+                },
+                height: 400
             }
             Plotly.newPlot("plotly_graph", data, layout);
         }
@@ -490,6 +533,11 @@
                 $("#sb_x_col").show();
                 $("#cb_is_grouped, #lb_is_grouped").show();
                 makeBarGraph();
+            } else if (graphType == "combo") {
+                resetGraph();
+                $("#sb_x_col").show();
+                $("#cb_is_grouped, #lb_is_grouped").show();
+                makeComboGraph();
             }
         }
 
