@@ -86,7 +86,7 @@
                         </select>
                     </div>
 
-                    <button type="button" class="ui icon button green" onclick="makeDataFrame();"><i
+                    <button type="button" class="ui icon button green" onclick="makeDataFrameBtn();"><i
                             class="check circle white icon"></i></button>
                     <button type="button" class="ui icon button red" onclick="resetDataFrame();"><i
                             class="trash alternate outline white icon"></i></button>
@@ -109,6 +109,46 @@
                                 <option value="bar">막대 그래프</option>
                                 <option value="combo">콤보 그래프</option>
                             </select>
+
+
+                            <div id="describe_value">
+                                <table>
+                                    <tr class="defultTr">
+                                        <th></th>
+                                        <th>갯수</th>
+                                        <th>평균</th>
+                                        <th>표준편차</th>
+                                        <th>최소값</th>
+                                        <th>중앙값</th>
+                                        <th>최대값</th>
+                                        <th>관측값</th>
+                                    </tr>
+                                    <!-- <tr>
+                                        <th>평균최고기온(°C)</th>
+                                        <th>31</th>
+                                        <th>19.654839</th>
+                                        <th>7.264243</th>
+                                        <th>7.3</th>
+                                        <th>19.6</th>
+                                        <th>32.099998</th>
+                                        <th>52.769226</th>
+                                    </tr>
+                                    <tr>
+                                        <th>균기온(°C) </th>
+                                        <th>31</th>
+                                        <th>19.654839</th>
+                                        <th>7.264243</th>
+                                        <th>7.3</th>
+                                        <th>19.6</th>
+                                        <th>32.099998</th>
+                                        <th>52.769226</th>
+                                    </tr> -->
+                                </table>
+                            </div>
+
+                        </div>
+                        <div class="graph_box">
+                            <div class="PlotlyGraph" id="plotly_graph"></div>
                             <div class="trend_line">
                                 <button type="button" class="ui button" onclick="makeSLGraphWithTrendline();">추세선 그리기</button>
                                 <button type="button" class="ui button" onclick="makeScatterAndLineGraph();">추세선 초기화</button>
@@ -119,10 +159,6 @@
                                 <p id="trendline_equation"></p>
                                 <p id="r_squared"></p>
                             </div>
-
-                        </div>
-                        <div class="graph_box">
-                            <div class="PlotlyGraph" id="plotly_graph"></div>
                         </div>
                     </div>
 
@@ -243,6 +279,32 @@
             return twoDimArr;
         }
 
+        function makeDescribe() {
+            $("#describe_value > table > tr").not('.defultTr').remove()
+            let dataCol = [dfXCol, dfYCol, dfY2Col];
+            dataCol = dataCol.filter(data => data != null) // null 필터링
+            dataCol = dataCol.filter(data => df.loc({ columns: [data] }).col_types[0] != "string") // 
+            let datas = df.describe().loc({ columns: [...dataCol] })
+            console.log(datas)
+            for (let num = 0; num < datas.col_data.length; num++) {
+                let trElem = document.createElement('tr')
+                let thElem = document.createElement('th')
+                thElem.innerHTML = datas.columns[num];
+                trElem.appendChild(thElem)
+                datas.col_data[num].forEach((data, index) => {
+                    let tdElem = document.createElement('td')
+                    tdElem.innerHTML = data;
+                    trElem.appendChild(tdElem)
+                });
+                document.getElementById("describe_value").getElementsByTagName("table")[0].appendChild(trElem)
+            }
+            if(dataCol.length != 0) {
+                $("#describe_value").fadeIn()
+
+            }
+            // df.describe().loc({columns: [dfXCol, dfYCol]}).print()
+        }
+
         // Number Range Function
         function range(start, end) {
             let arr = [];
@@ -333,7 +395,8 @@
             }
 
             let data = [trace1];
-
+            // $("#trendline_value").hide()
+            resetGraph();
             Plotly.newPlot("plotly_graph", data, layout, config);
         }
 
@@ -363,7 +426,7 @@
             pTagtrendX.innerHTML = `x : ${equationX}`;
             pTagtrendY.innerHTML = `y : ${equationY}`;
             pTagtrendEquation.innerHTML = `Equation : ${equationX} * x + ${equationY}`;
-            pTagRSquared.innerHTML = `R-Squared : ${rSquared} (about ${rSquared * 100}%)`
+            pTagRSquared.innerHTML = `R-Squared : ${rSquared} (about ${Math.ceil(rSquared * 100)}%)`
 
             let trace1 = {
                 x: dfXColData,
@@ -391,7 +454,7 @@
             }
 
             let data = [trace1, trendLine];
-
+            $("#trendline_value").fadeIn()
             Plotly.newPlot("plotly_graph", data, layout)
         }
 
@@ -518,14 +581,19 @@
                 height: 400
             }
 
-            if(isY2AxisActf){
+            if (isY2AxisActf) {
                 traceForLine["yaxis"] = "y2";
-                layout["yaxis2"] = {title: dfY2Col, overlaying: "y", side: "right"};
+                layout["yaxis2"] = { title: dfY2Col, overlaying: "y", side: "right" };
             }
             Plotly.newPlot("plotly_graph", data, layout);
         }
 
         // Set new DataFrame
+        function makeDataFrameBtn() {
+            if (makeDataFrame()) {
+                makeDescribe();
+            }
+        }
         async function makeDataFrame() {
             let isSelectBoxXColVisible = $("#sb_x_col").is(":visible");
 
@@ -566,21 +634,25 @@
             } else { // When Only one Columns
                 if (!dfYCol || dfYCol == "none") {
                     alert("컬럼을 선택하세요.")
+                    return false
                 } else {
                     dfYColData = reshapeTo1d(df.loc({ columns: [dfYCol] }).values)
                     df.loc({ columns: [dfYCol] }).plot("danfo_dataframe").table();
                     await makeBoxGraph()
                 }
             }
+            return true
         }
 
         // Reset Graph
         function resetGraph() {
+            $("#trendline_value").hide();
             Plotly.newPlot("plotly_graph", [{
                 x: null,
                 y: null,
                 mode: graphType
             }]);
+            
         }
 
         // Reset DataFrame
@@ -610,7 +682,7 @@
             $(".cb_is_grouped_box").hide();
         }
 
-        function hideCbY2Axis(){
+        function hideCbY2Axis() {
             isY2AxisActf = 0;
             $("input:checkbox[id='cb_y2_axis_actf']").prop("checked", false);
             $(".cb_y2_axis_actf_box").hide();
@@ -639,13 +711,13 @@
             aggregateMethod = e.value;
         }
 
-        function onY2AxisCheckBoxChange(e){
+        function onY2AxisCheckBoxChange(e) {
             console.log($("#cb_y2_axis_actf").is(":checked"));
             isY2AxisActf = $("#cb_y2_axis_actf").is(":checked");
-            try{
+            try {
                 makeComboGraph();
-            } catch(err) {
-                console.log("Error Occured :\n"+err);
+            } catch (err) {
+                console.log("Error Occured :\n" + err);
             }
         }
 
@@ -661,11 +733,15 @@
                 if (confirm("삭제 하시겠습니까?\n\n삭제될 데이터 :\n" + pts)) {
                     // Delete data-point
                     dataTrueIdx = reshapeTo1d(df.loc({ columns: [dfYCol] }).eq(data.points[0].y).data).indexOf(true)
-                    df.drop({ index: [dataTrueIdx], axis: 0, inplace: true }); // Data Drop
-                    df.reset_index({ inplace: true });
+                    df = df.drop({ index: [dataTrueIdx], axis: 0 }); // Data Drop
+                    df = df.reset_index();
 
                     // Reload DataFrame and box plot
-                    await makeDataFrame();
+                    
+                    if(await makeDataFrame()){
+                        makeDescribe()
+                    }
+
                 } else {
                     return;
                 }
@@ -678,6 +754,7 @@
         let spanY2ColText = document.getElementById("span_y_col_text");
 
         function onGraphChange(e) {
+            $("#trendline_value").hide();
             graphType = e.value;
 
 
@@ -720,7 +797,7 @@
                 spanY2ColText.innerText = "Y Column (for Bar Plot)"
                 $("#sb_y2_col").show();
                 $("#sb_x_col").show();
-                $(".cb_is_grouped_box").css('display','inline-block');
+                $(".cb_is_grouped_box").css('display', 'inline-block');
                 $(".cb_y2_axis_actf_box").show();
             }
 

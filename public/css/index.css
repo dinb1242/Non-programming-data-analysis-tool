@@ -70,13 +70,33 @@
 
 .graph_layout {
     display: flex;
+    flex-wrap: wrap;
+}
+
+#describe_value{
+    display: none;
+
+}
+
+#trendline_value { 
+    text-align: center;
+}
+#trendline_value > p{ 
+    display: inline-block;
+    margin: 0 4px;
+    font-weight: bold;
+
+}
+
+#describe_value > table {
+    width: 100%;
 }
 
 .graph_layout > .property_box {
-    flex: 0 0 30%;
+    flex: 0 0 100%;
 }
 .graph_layout > .graph_box {
-    flex: 0 0 70%;
+    flex: 0 0 100%;
 }
 
 .topBack:before{
