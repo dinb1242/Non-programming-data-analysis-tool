@@ -85,7 +85,6 @@
                             class="check circle white icon"></i></button>
                     <button type="button" class="ui icon button red" onclick="resetDataFrame();"><i
                             class="trash alternate outline white icon"></i></button>
-
                 </form>
                 <div id="danfo_dataframe"></div>
             </div>
@@ -158,6 +157,7 @@
         $(document).ready(function () {
             // Initialize the graph
             $("#sb_graph_select").find("option").eq(0).prop("selected", true);
+            $("#select_aggregate_method").find("option").eq(0).prop("selected", true);
             $("input:checkbox[id='cb_is_grouped']").prop("checked", false);
             // $("#cb_is_grouped, #lb_is_grouped").hide();
             $("#select_aggregate_method").hide();
@@ -240,6 +240,24 @@
             return arr;
         }
 
+        function calcMaxAgainstX(uniqueXData, yCol){
+            let tempArr = []
+            uniqueXData.forEach(label => {
+                tempArr.push( Math.max.apply(null, reshapeTo1d(Array.from(df.query({ column: dfXCol, is: "==", to: label }).loc({columns: [yCol]}).values)) ) )
+            })
+
+            return tempArr;
+        }
+
+        function calcMeanAgainstX(uniqueXData, yCol){
+            let tempArr = []
+            uniqueXData.forEach(label => {
+                tempArr.push( df.query({ column: dfXCol, is: "==", to: label }).loc({columns: [yCol]}).mean().values[0]);
+            })
+
+            return tempArr;
+        }
+
         function calcRSquared(yTrue, yPred) {
             // yTure = dfYColData
             // yPred = trendY
@@ -290,7 +308,7 @@
             }
 
             let layout = {
-                title: "Test Title",
+                title: `${dfXCol} and ${dfYCol} : Line Graph`,
                 xaxis: {
                     title: dfXCol
                 },
@@ -340,17 +358,19 @@
             let trace1 = {
                 x: dfXColData,
                 y: dfYColData,
-                mode: graphType
+                mode: graphType,
+                name: dfYCol
             }
 
             let trendLine = {
                 x: dfXColData,
                 y: trendY,
-                mode: "lines"
+                mode: "lines",
+                name: "추세선"
             }
 
             let layout = {
-                title: "Test Title",
+                title: `${dfXCol} and ${dfYCol} : Line Graph with Trendline`,
                 xaxis: {
                     title: dfXCol
                 },
@@ -369,12 +389,13 @@
             // A box graph that can remove a point which is clicked.
             let trace0 = {
                 y: dfYColData,
-                type: "box"
+                type: "box",
+                name: dfYCol
             }
 
             let layout = {
                 hovermode: "closest",
-                title: "Click Event Test",
+                title: `${dfYCol} : Box Graph`,
                 yaxis: {
                     title: dfYCol
                 },
@@ -397,7 +418,7 @@
             let trace0 = {
                 x: dfXColData,
                 y: dfYColData,
-                type: "bar"
+                type: "bar",
             }
             if (isGrouped) {
                 /*
@@ -406,19 +427,22 @@
                         2. Extract Max number in Y data using each unique data of X -> maxYData Array
                 */
                 let uniqueXData = df[dfXCol].unique().values;
-                let maxYData = [];
-                uniqueXData.forEach(label => {
-                    maxYData.push(Math.max.apply(null, df.query({ column: dfXCol, is: "==", to: label })[dfYCol].values));
-                })
-
+                let yDataForBar;
+                if(aggregateMethod == "mean"){
+                    yDataForBar = calcMeanAgainstX(uniqueXData, dfYCol);
+                } else if(aggregateMethod == "max"){
+                    yDataForBar = calcMaxAgainstX(uniqueXData, dfYCol);
+                }
+                
                 trace0.x = uniqueXData;
-                trace0.y = maxYData;
+                trace0.y = yDataForBar;
 
                 console.log(trace0.x, trace0.y);
             }
             let data = [trace0];
 
             let layout = {
+                title: `${dfXCol} and ${dfYCol} : Bar Graph`,
                 xaxis: {
                     title: dfXCol
                 },
@@ -436,13 +460,15 @@
             let traceForBar = {
                 x: dfXColData,
                 y: dfYColData,
-                type: "bar"
+                type: "bar",
+                name: dfYCol
             }
 
             let traceForLine = {
                 x: dfXColData,
                 y: dfY2ColData,
-                type: "line"
+                type: "line",
+                name: dfY2Col
             }
 
             if (isGrouped) {
@@ -452,18 +478,22 @@
                         2. Extract Max number in Y data using each unique data of X -> maxYData Array
                 */
                 let uniqueXData = df[dfXCol].unique().values;
-                let maxYDataForBar = [];
-                let maxYDataForLine = [];
-                uniqueXData.forEach(label => {
-                    maxYDataForBar.push(Math.max.apply(null, df.query({ column: dfXCol, is: "==", to: label })[dfYCol].values));
-                    maxYDataForLine.push(Math.max.apply(null, df.query({ column: dfXCol, is: "==", to: label })[dfY2Col].values));
-                })
+                let yDataForBar = null;
+                let yDataForLine = null;
+
+                if(aggregateMethod == "mean"){
+                    yDataForBar = calcMeanAgainstX(uniqueXData, dfYCol);
+                    yDataForLine = calcMeanAgainstX(uniqueXData, dfY2Col);
+                } else if(aggregateMethod == "max"){
+                    yDataForBar = calcMaxAgainstX(uniqueXData, dfYCol);
+                    yDataForLine = calcMaxAgainstX(uniqueXData, dfY2Col);
+                }
 
                 traceForBar.x = uniqueXData;
-                traceForBar.y = maxYDataForBar;
+                traceForBar.y = yDataForBar;
 
                 traceForLine.x = uniqueXData;
-                traceForLine.y = maxYDataForLine;
+                traceForLine.y = yDataForLine;
 
                 console.log(traceForBar.x, traceForBar.y);
                 console.log(traceForLine.x, traceForLine.y);
@@ -471,6 +501,7 @@
             let data = [traceForBar, traceForLine];
 
             let layout = {
+                title : `Combo Graph with Bar and Line`,
                 xaxis: {
                     title: dfXCol
                 },
@@ -563,6 +594,7 @@
 
         function hideChIsGrouped() {
             isGrouped = 0; // Initialize before being hidden
+            $("input:checkbox[id='cb_is_grouped']").prop("checked", false);
             $(".cb_is_grouped_box").hide();
         }
 
@@ -585,8 +617,8 @@
             }
         }
 
-        function onAggregateCheckBoxChange() {
-
+        function onAggregateCheckBoxChange(e) {
+            aggregateMethod = e.value;
         }
 
         // If a point on box graph is clicked
