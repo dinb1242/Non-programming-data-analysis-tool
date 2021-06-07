@@ -292,7 +292,7 @@
             }
 
             let layout = {
-                title: "Test Title",
+                title: `${dfXCol} and ${dfYCol} : Line Graph`,
                 xaxis: {
                     title: dfXCol
                 },
@@ -342,17 +342,19 @@
             let trace1 = {
                 x: dfXColData,
                 y: dfYColData,
-                mode: graphType
+                mode: graphType,
+                name: dfYCol
             }
 
             let trendLine = {
                 x: dfXColData,
                 y: trendY,
-                mode: "lines"
+                mode: "lines",
+                name: "추세선"
             }
 
             let layout = {
-                title: "Test Title",
+                title: `${dfXCol} and ${dfYCol} : Line Graph with Trendline`,
                 xaxis: {
                     title: dfXCol
                 },
@@ -371,12 +373,13 @@
             // A box graph that can remove a point which is clicked.
             let trace0 = {
                 y: dfYColData,
-                type: "box"
+                type: "box",
+                name: dfYCol
             }
 
             let layout = {
                 hovermode: "closest",
-                title: "Click Event Test",
+                title: `${dfYCol} : Box Graph`,
                 yaxis: {
                     title: dfYCol
                 },
@@ -399,7 +402,7 @@
             let trace0 = {
                 x: dfXColData,
                 y: dfYColData,
-                type: "bar"
+                type: "bar",
             }
             if (isGrouped) {
                 /*
@@ -423,6 +426,7 @@
             let data = [trace0];
 
             let layout = {
+                title: `${dfXCol} and ${dfYCol} : Bar Graph`,
                 xaxis: {
                     title: dfXCol
                 },
@@ -440,13 +444,15 @@
             let traceForBar = {
                 x: dfXColData,
                 y: dfYColData,
-                type: "bar"
+                type: "bar",
+                name: dfYCol
             }
 
             let traceForLine = {
                 x: dfXColData,
                 y: dfY2ColData,
-                type: "line"
+                type: "line",
+                name: dfY2Col
             }
 
             if (isGrouped) {
@@ -479,6 +485,7 @@
             let data = [traceForBar, traceForLine];
 
             let layout = {
+                title : `Combo Graph with Bar and Line`,
                 xaxis: {
                     title: dfXCol
                 },
@@ -570,6 +577,7 @@
 
         function hideChIsGrouped() {
             isGrouped = 0; // Initialize before being hidden
+            $("input:checkbox[id='cb_is_grouped']").prop("checked", false);
             $("#cb_is_grouped, #lb_is_grouped").hide();
         }
 
