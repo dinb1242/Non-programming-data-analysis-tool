@@ -202,7 +202,7 @@
         function initializeDf(result) {
             // Dataframe init and print on html
             df = result;
-            df.plot("danfo_dataframe").table({ layout: { autosize: true } });
+            df.plot("danfo_dataframe").table({ layout: { autosize: true }, displaylogo: false });
 
             // Create select tag's options using columns of DataFrame
             let selectXCol = document.getElementById("select_x_col");
@@ -330,6 +330,7 @@
 
             let config = {
                 responsive: true,
+                displaylogo: false
             }
 
             let data = [trace1];
@@ -387,12 +388,16 @@
                 yaxis: {
                     title: dfYCol
                 },
-                height: 400
+                height: 400,
+            }
+
+            let config = {
+                displaylogo: false
             }
 
             let data = [trace1, trendLine];
 
-            Plotly.newPlot("plotly_graph", data, layout)
+            Plotly.newPlot("plotly_graph", data, layout, config)
         }
 
         function makeBoxGraph() {
@@ -414,7 +419,11 @@
 
             let data = [trace0]
 
-            Plotly.newPlot("plotly_graph", data, layout);
+            let config = {
+                displaylogo: false
+            }
+
+            Plotly.newPlot("plotly_graph", data, layout, config);
 
             // Create a click and elete data-point event on box plot
             var boxGraphElement = document.getElementById("plotly_graph");
@@ -461,7 +470,11 @@
                 },
                 height: 400
             }
-            Plotly.newPlot("plotly_graph", data, layout);
+
+            let config = {
+                displaylogo: false
+            }
+            Plotly.newPlot("plotly_graph", data, layout, config);
         }
 
         // Developing...
@@ -518,11 +531,15 @@
                 height: 400
             }
 
+            let config = {
+                displaylogo: false
+            }
+
             if(isY2AxisActf){
                 traceForLine["yaxis"] = "y2";
                 layout["yaxis2"] = {title: dfY2Col, overlaying: "y", side: "right"};
             }
-            Plotly.newPlot("plotly_graph", data, layout);
+            Plotly.newPlot("plotly_graph", data, layout, config);
         }
 
         // Set new DataFrame
@@ -536,7 +553,7 @@
                         alert("모든 컬럼을 선택하세요.")
                         return false;
                     } else {
-                        df.loc({ columns: [dfXCol, dfYCol, dfY2Col] }).plot("danfo_dataframe").table(); // Reload DataFrame
+                        df.loc({ columns: [dfXCol, dfYCol, dfY2Col] }).plot("danfo_dataframe").table({ layout: {}, displaylogo: false}); // Reload DataFrame
                         dfXColData = reshapeTo1d(df.loc({ columns: [dfXCol] }).values)
                         dfYColData = reshapeTo1d(df.loc({ columns: [dfYCol] }).values)
                         dfY2ColData = reshapeTo1d(df.loc({ columns: [dfY2Col] }).values)
@@ -546,7 +563,7 @@
                         alert("모든 컬럼을 선택하세요.")
                         return false;
                     } else {
-                        df.loc({ columns: [dfXCol, dfYCol] }).plot("danfo_dataframe").table(); // Reload DataFrame
+                        df.loc({ columns: [dfXCol, dfYCol] }).plot("danfo_dataframe").table({ layout: {}, displaylogo: false}); // Reload DataFrame
                         // Set Dataframe's data
                         dfXColData = reshapeTo1d(df.loc({ columns: [dfXCol] }).values)
                         dfYColData = reshapeTo1d(df.loc({ columns: [dfYCol] }).values)
@@ -568,7 +585,7 @@
                     alert("컬럼을 선택하세요.")
                 } else {
                     dfYColData = reshapeTo1d(df.loc({ columns: [dfYCol] }).values)
-                    df.loc({ columns: [dfYCol] }).plot("danfo_dataframe").table();
+                    df.loc({ columns: [dfYCol] }).plot("danfo_dataframe").table({ layout: {}, displaylogo: false});
                     await makeBoxGraph()
                 }
             }
