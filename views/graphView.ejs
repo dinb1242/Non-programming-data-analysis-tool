@@ -47,10 +47,15 @@
                         <input type="checkbox" id="cb_is_grouped" onchange="onGroupedCheckBoxChange(this);" />
                         <label id="lb_is_grouped" for="cb_is_grouped">X축 기준 집계 (Aggregate)</label>
                         <br />
+                        <br />
                         <select id="select_aggregate_method" onchange="onAggregateCheckBoxChange();">
                             <option value="mean">평균</option>
                             <option value="max">최대값</option>
                         </select>
+                    </div>
+                    <div class="cb_y2_axis_actf_box">
+                        <input type="checkbox" id="cb_y2_axis_actf" onchange="onY2AxisCheckBoxChange(this);" />
+                        <label id="lb_y2_axis_actf" for="cb_y2_axis_actf">Y Column Axis of Line Activate</label>
                     </div>
                 </form>
                 <!-- DataFrame Controls -->
@@ -140,6 +145,7 @@
         let aggregateMethod = "";
 
         let isGrouped = 0;
+        let isY2AxisActf = 0;
 
         let setResize;
 
@@ -159,8 +165,10 @@
             $("#sb_graph_select").find("option").eq(0).prop("selected", true);
             $("#select_aggregate_method").find("option").eq(0).prop("selected", true);
             $("input:checkbox[id='cb_is_grouped']").prop("checked", false);
+            $("input:checkbox[id='cb_y2_axis_actf']").prop("checked", false);
             // $("#cb_is_grouped, #lb_is_grouped").hide();
             $("#select_aggregate_method").hide();
+            $(".cb_y2_axis_actf_box").hide();
             hideDfY2Col();
             graphType = "lines";
             aggregateMethod = "mean";
@@ -291,12 +299,6 @@
             let intercept = yMean.sub(xMean.mul(coef));
 
             return [coef, intercept];
-        }
-
-        function rSquared() {
-            let sse;
-            let ssr;
-            let sst;
         }
 
         // Set new Graph
@@ -468,7 +470,7 @@
                 x: dfXColData,
                 y: dfY2ColData,
                 type: "line",
-                name: dfY2Col
+                name: dfY2Col,
             }
 
             if (isGrouped) {
@@ -505,10 +507,12 @@
                 xaxis: {
                     title: dfXCol
                 },
-                yaxis: {
-                    title: dfYCol
-                },
                 height: 400
+            }
+
+            if(isY2AxisActf){
+                traceForLine["yaxis"] = "y2";
+                layout["yaxis2"] = {title: dfY2Col, overlaying: "y", side: "right"};
             }
             Plotly.newPlot("plotly_graph", data, layout);
         }
@@ -598,6 +602,12 @@
             $(".cb_is_grouped_box").hide();
         }
 
+        function hideCbY2Axis(){
+            isY2AxisActf = 0;
+            $("input:checkbox[id='cb_y2_axis_actf']").prop("checked", false);
+            $(".cb_y2_axis_actf_box").hide();
+        }
+
         ////////////////////////////////////////////////////////
         // Handler functions
         ////////////////////////////////////////////////////////
@@ -619,6 +629,16 @@
 
         function onAggregateCheckBoxChange(e) {
             aggregateMethod = e.value;
+        }
+
+        function onY2AxisCheckBoxChange(e){
+            console.log($("#cb_y2_axis_actf").is(":checked"));
+            isY2AxisActf = $("#cb_y2_axis_actf").is(":checked");
+            try{
+                makeComboGraph();
+            } catch(err) {
+                console.log("Error Occured :\n"+err);
+            }
         }
 
         // If a point on box graph is clicked
@@ -668,6 +688,7 @@
                 $("#sb_x_col").show();
                 hideChIsGrouped();
                 hideDfY2Col();
+                hideCbY2Axis();
                 makeScatterAndLineGraph();
             } else if (graphType == "box") {
                 resetGraph();
@@ -677,11 +698,12 @@
                 hideDfXCol();
                 hideDfY2Col();
                 hideChIsGrouped();
-
+                hideCbY2Axis();
             } else if (graphType == "bar") {
                 resetGraph();
                 spanY2ColText.innerText = "Y Column";
                 hideDfY2Col();
+                hideCbY2Axis();
                 $("#sb_x_col").show();
                 $(".cb_is_grouped_box").css('display','inline-block');
                 makeBarGraph();
@@ -691,6 +713,7 @@
                 $("#sb_y2_col").show();
                 $("#sb_x_col").show();
                 $(".cb_is_grouped_box").css('display','inline-block');
+                $(".cb_y2_axis_actf_box").show();
             }
 
         }
