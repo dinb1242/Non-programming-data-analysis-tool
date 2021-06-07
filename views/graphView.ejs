@@ -95,24 +95,32 @@
 
                 <!-- Graph Controls -->
                 <form class="ui fluid form">
-                    <div class="trend_line">
-                        <button type="button" class="ui button" onclick="makeSLGraphWithTrendline();">추세선 그리기</button>
-                        <button type="button" class="ui button" onclick="makeScatterAndLineGraph();">추세선 초기화</button>
+                    <div class="graph_layout">
+                        <div class="property_box">
+                            <select onchange="onGraphChange(this);" id="sb_graph_select">
+                                <option value="lines" selected>선 그래프</option>
+                                <option value="markers">산점도 그래프</option>
+                                <option value="box">박스 그래프</option>
+                                <option value="bar">막대 그래프</option>
+                                <option value="combo">콤보 그래프</option>
+                            </select>
+                            <div class="trend_line">
+                                <button type="button" class="ui button" onclick="makeSLGraphWithTrendline();">추세선 그리기</button>
+                                <button type="button" class="ui button" onclick="makeScatterAndLineGraph();">추세선 초기화</button>
+                            </div>
+                            <div id="trendline_value">
+                                <p id="trendline_x"></p>
+                                <p id="trendline_y"></p>
+                                <p id="trendline_equation"></p>
+                                <p id="r_squared"></p>
+                            </div>
+
+                        </div>
+                        <div class="graph_box">
+                            <div class="PlotlyGraph" id="plotly_graph"></div>
+                        </div>
                     </div>
-                    <select onchange="onGraphChange(this);" id="sb_graph_select">
-                        <option value="lines" selected>선 그래프</option>
-                        <option value="markers">산점도 그래프</option>
-                        <option value="box">박스 그래프</option>
-                        <option value="bar">막대 그래프</option>
-                        <option value="combo">콤보 그래프</option>
-                    </select>
-                    <div class="PlotlyGraph" id="plotly_graph"></div>
-                    <div id="trendline_value">
-                        <p id="trendline_x"></p>
-                        <p id="trendline_y"></p>
-                        <p id="trendline_equation"></p>
-                        <p id="r_squared"></p>
-                    </div>
+
                 </form>
             </div>
         </div>
@@ -240,19 +248,19 @@
             return arr;
         }
 
-        function calcMaxAgainstX(uniqueXData, yCol){
+        function calcMaxAgainstX(uniqueXData, yCol) {
             let tempArr = []
             uniqueXData.forEach(label => {
-                tempArr.push( Math.max.apply(null, reshapeTo1d(Array.from(df.query({ column: dfXCol, is: "==", to: label }).loc({columns: [yCol]}).values)) ) )
+                tempArr.push(Math.max.apply(null, reshapeTo1d(Array.from(df.query({ column: dfXCol, is: "==", to: label }).loc({ columns: [yCol] }).values))))
             })
 
             return tempArr;
         }
 
-        function calcMeanAgainstX(uniqueXData, yCol){
+        function calcMeanAgainstX(uniqueXData, yCol) {
             let tempArr = []
             uniqueXData.forEach(label => {
-                tempArr.push( df.query({ column: dfXCol, is: "==", to: label }).loc({columns: [yCol]}).mean().values[0]);
+                tempArr.push(df.query({ column: dfXCol, is: "==", to: label }).loc({ columns: [yCol] }).mean().values[0]);
             })
 
             return tempArr;
@@ -428,12 +436,12 @@
                 */
                 let uniqueXData = df[dfXCol].unique().values;
                 let yDataForBar;
-                if(aggregateMethod == "mean"){
+                if (aggregateMethod == "mean") {
                     yDataForBar = calcMeanAgainstX(uniqueXData, dfYCol);
-                } else if(aggregateMethod == "max"){
+                } else if (aggregateMethod == "max") {
                     yDataForBar = calcMaxAgainstX(uniqueXData, dfYCol);
                 }
-                
+
                 trace0.x = uniqueXData;
                 trace0.y = yDataForBar;
 
@@ -481,10 +489,10 @@
                 let yDataForBar = null;
                 let yDataForLine = null;
 
-                if(aggregateMethod == "mean"){
+                if (aggregateMethod == "mean") {
                     yDataForBar = calcMeanAgainstX(uniqueXData, dfYCol);
                     yDataForLine = calcMeanAgainstX(uniqueXData, dfY2Col);
-                } else if(aggregateMethod == "max"){
+                } else if (aggregateMethod == "max") {
                     yDataForBar = calcMaxAgainstX(uniqueXData, dfYCol);
                     yDataForLine = calcMaxAgainstX(uniqueXData, dfY2Col);
                 }
@@ -501,7 +509,7 @@
             let data = [traceForBar, traceForLine];
 
             let layout = {
-                title : `Combo Graph with Bar and Line`,
+                title: `Combo Graph with Bar and Line`,
                 xaxis: {
                     title: dfXCol
                 },
@@ -683,14 +691,14 @@
                 spanY2ColText.innerText = "Y Column";
                 hideDfY2Col();
                 $("#sb_x_col").show();
-                $(".cb_is_grouped_box").css('display','inline-block');
+                $(".cb_is_grouped_box").css('display', 'inline-block');
                 makeBarGraph();
             } else if (graphType == "combo") {
                 resetGraph();
                 spanY2ColText.innerText = "Y Column (for Bar Plot)"
                 $("#sb_y2_col").show();
                 $("#sb_x_col").show();
-                $(".cb_is_grouped_box").css('display','inline-block');
+                $(".cb_is_grouped_box").css('display', 'inline-block');
             }
 
         }
