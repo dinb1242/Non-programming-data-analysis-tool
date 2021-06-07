@@ -9,31 +9,43 @@
 
     <link rel="stylesheet" href="/css/index.css">
     <%- include ("./common/cssScript") %>
-    <!-- Jquery -->
+        <!-- Jquery -->
 
 
-    <!-- Plotly.js -->
-    <script src="https://cdn.plot.ly/plotly-1.58.4.min.js"></script>
+        <!-- Plotly.js -->
+        <script src="https://cdn.plot.ly/plotly-1.58.4.min.js"></script>
 
-    <!-- Danfo.js -->
-    <script src="https://cdn.jsdelivr.net/npm/danfojs@0.2.4/lib/bundle.min.js"></script>
+        <!-- Danfo.js -->
+        <script src="https://cdn.jsdelivr.net/npm/danfojs@0.2.4/lib/bundle.min.js"></script>
 
-    <!-- Tensorflow.js -->
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@2.0.0/dist/tf.min.js"></script>
+        <!-- Tensorflow.js -->
+        <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@2.0.0/dist/tf.min.js"></script>
 
 </head>
 
 <body>
     <div class="MainContainer">
-
+        <div class="topBack">
+            <div class="ui container expPage">
+                <div class="textBox">
+                    <p><span style="font-size: 26px; line-height: 36px;">안녕하세요 여러분,<br><span class="yt">데이터 분석</span>
+                            실험실에 오신걸
+                            환영합니다.</span><br><br>
+                        지금 부터 아래의 테이터를 이용하여, 데이터를 분석하고 조작한 그래프를 확인 할 수 있습니다.
+                    </p>
+                </div>
+            </div>
+        </div>
         <!-- DataFrame's table will be shown -->
         <div class="DanfoContainer">
-            <h1>Danfo.js Test</h1>
+            <h1 class="">데이터 조작 공간</h1>
 
             <!-- DataFrame Controls -->
-            <div id="sb_x_col" style="display: inline;">
-                <span id="span_x_col_text">X Column :</span> 
-                <select id="select_x_col" onchange="onDataFrameChange(this, 0);">
+            <form class="ui fluid form">
+
+
+            <div id="sb_x_col" style="display: inline-block; text-align: left;">
+                X Column<select id="select_x_col" onchange="onDataFrameChange(this, 0);">
                     <option value="none">컬럼을 선택하세요.</option>
                     <!-- Option tag will be shown by processing Javascript function -->
                 </select>
@@ -56,11 +68,11 @@
                 </select>
             </div>
 
-            <button onclick="makeDataFrame();">선택</button>
-            <button onclick="resetDataFrame();">초기화</button>
+            <button class="ui icon button green" onclick="makeDataFrame();"><i class="check circle white icon"></i></button>
+            <button class="ui icon button red" onclick="resetDataFrame();"><i class="trash alternate outline white icon"></i></button>
             <input type="checkbox" id="cb_is_grouped" onchange="onGroupedCheckBoxChange(this);" />
             <label id="lb_is_grouped" for="cb_is_grouped">X축 범주 여부</label>
-
+            </form>
             <div id="danfo_dataframe"></div>
         </div>
 
@@ -245,7 +257,8 @@
                 },
                 yaxis: {
                     title: dfYCol
-                }
+                },
+                height: 400
             }
 
             let config = {
@@ -304,7 +317,8 @@
                 },
                 yaxis: {
                     title: dfYCol
-                }
+                },
+                height: 400
             }
 
             let data = [trace1, trendLine];
@@ -324,7 +338,8 @@
                 title: "Click Event Test",
                 yaxis: {
                     title: dfYCol
-                }
+                },
+                height: 400
             }
 
             let data = [trace0]
@@ -341,9 +356,9 @@
 
         function makeBarGraph() {
             let trace0 = {
-                    x: dfXColData,
-                    y: dfYColData,
-                    type: "bar"
+                x: dfXColData,
+                y: dfYColData,
+                type: "bar"
             }
             if (isGrouped) {
                 /*
@@ -354,8 +369,6 @@
                 let uniqueXData = df[dfXCol].unique().values;
                 let maxYData = [];
                 uniqueXData.forEach(label => {
-                    console.log(`Current Label : ${label}`);
-                    console.log(Math.max.apply(null, df.query({ column: dfXCol, is: "==", to: label })[dfYCol].values))
                     maxYData.push(Math.max.apply(null, df.query({ column: dfXCol, is: "==", to: label })[dfYCol].values));
                 })
 
@@ -372,7 +385,48 @@
                 },
                 yaxis: {
                     title: dfYCol
-                }
+                },
+                height: 400
+            }
+            Plotly.newPlot("plotly_graph", data, layout);
+        }
+        
+        // Developing...
+        function makeComboGraph(){
+            // Implement 
+            let trace0 = {
+                    x: dfXColData,
+                    y: dfYColData,
+                    type: "bar"
+            }
+            if (isGrouped) {
+                /*
+                    The the check box is checked, the flow is:
+                        1. Extract unique data in X (It will be label data) -> uniqueXData Variable
+                        2. Extract Max number in Y data using each unique data of X -> maxYData Array
+                */
+                let uniqueXData = df[dfXCol].unique().values;
+                let maxYDataForLine = [];
+                let maxYDataForBar = [];
+                uniqueXData.forEach(label => {
+                    maxYDataForBar.push(Math.max.apply(null, df.query({ column: dfXCol, is: "==", to: label })[dfYCol].values));
+                })
+
+                trace0.x = uniqueXData;
+                trace0.y = maxYData;
+
+                console.log(trace0.x, trace0.y);
+            }
+            let data = [trace0];
+
+            let layout = {
+                xaxis: {
+                    title: dfXCol
+                },
+                yaxis: {
+                    title: dfYCol
+                },
+                height: 400
             }
             Plotly.newPlot("plotly_graph", data, layout);
         }
