@@ -88,22 +88,26 @@
                 <h1>Plotly.js Test</h1>
 
                 <!-- Graph Controls -->
-                <select onchange="onGraphChange(this);" id="sb_graph_select">
-                    <option value="lines" selected>선 그래프</option>
-                    <option value="markers">산점도 그래프</option>
-                    <option value="box">박스 그래프</option>
-                    <option value="bar">막대 그래프</option>
-                    <option value="combo">콤보 그래프</option>
-                </select>
-                <div class="PlotlyGraph" id="plotly_graph"></div>
-                <button onclick="makeSLGraphWithTrendline();">추세선 그리기 (선, 산점도만 해당)</button>
-                <button onclick="makeScatterAndLineGraph();">추세선 초기화</button>
-                <div id="trendline_value">
-                    <p id="trendline_x"></p>
-                    <p id="trendline_y"></p>
-                    <p id="trendline_equation"></p>
-                    <p id="r_squared"></p>
-                </div>
+                <form class="ui fluid form">
+                    <select onchange="onGraphChange(this);" id="sb_graph_select">
+                        <option value="lines" selected>선 그래프</option>
+                        <option value="markers">산점도 그래프</option>
+                        <option value="box">박스 그래프</option>
+                        <option value="bar">막대 그래프</option>
+                        <option value="combo">콤보 그래프</option>
+                    </select>
+                    <div class="PlotlyGraph" id="plotly_graph"></div>
+                    <div class="trend_line">
+                        <button type="button" class="ui button" onclick="makeSLGraphWithTrendline();">추세선 그리기</button>
+                        <button type="button" class="ui button" onclick="makeScatterAndLineGraph();">추세선 초기화</button>
+                    </div>
+                    <div id="trendline_value">
+                        <p id="trendline_x"></p>
+                        <p id="trendline_y"></p>
+                        <p id="trendline_equation"></p>
+                        <p id="r_squared"></p>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -622,6 +626,17 @@
 
         function onGraphChange(e) {
             graphType = e.value;
+
+
+            if (graphType == "lines" || graphType == "markers") {
+                $(".trend_line").fadeIn();
+
+            } else {
+                $(".trend_line").hide()
+            }
+
+
+
             if (graphType == "lines" || graphType == "markers") {
                 resetGraph();
                 spanY2ColText.innerText = "Y Column";
@@ -637,6 +652,7 @@
                 hideDfXCol();
                 hideDfY2Col();
                 hideChIsGrouped();
+
             } else if (graphType == "bar") {
                 resetGraph();
                 spanY2ColText.innerText = "Y Column";
@@ -651,6 +667,7 @@
                 $("#sb_x_col").show();
                 $("#cb_is_grouped, #lb_is_grouped").show();
             }
+
         }
 
         function onDataFrameChange(e, selectBoxIdx) {

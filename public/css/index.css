@@ -12,7 +12,7 @@
     padding: 20px;
     text-align: center;
     position: relative;
-    flex: 0 0 50%;
+    flex: 0 0 60%;
 }
 
 .Container_layout {
@@ -30,15 +30,20 @@
 
 /* Plotly CSS */
 .PlotlyContainer {
+    text-align: center;
+    padding: 20px 40px 20px 20px;
     position: relative;
-    flex: 0 0 50%;
+    flex: 0 0 40%;
 }
 
 .PlotlyGraph {
     position: relative;
-    width: 600px;
-    height: 300px;
+    width: 80%;
+    /* height: 300px; */
     border: 1px solid green;
+    overflow: hidden;
+    display: inline-block;    
+    margin-top: 20px;
 }
 
 .topBack {
