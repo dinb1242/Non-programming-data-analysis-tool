@@ -53,10 +53,7 @@
                             <option value="max">최대값</option>
                         </select>
                     </div>
-                    <div class="cb_y2_axis_actf_box">
-                        <input type="checkbox" id="cb_y2_axis_actf" onchange="onY2AxisCheckBoxChange(this);" />
-                        <label id="lb_y2_axis_actf" for="cb_y2_axis_actf">Y Column Axis of Line Activate</label>
-                    </div>
+
                 </form>
                 <!-- DataFrame Controls -->
                 <form class="ui fluid form">
@@ -97,6 +94,10 @@
             <!-- Plotly's Graph will be shown -->
             <div class="PlotlyContainer">
                 <h1>그래프 조작 공간</h1>
+                <div class="cb_y2_axis_actf_box">
+                    <input type="checkbox" id="cb_y2_axis_actf" onchange="onY2AxisCheckBoxChange(this);" />
+                    <label id="lb_y2_axis_actf" for="cb_y2_axis_actf">Multiple Y Axis</label>
+                </div>
 
                 <!-- Graph Controls -->
                 <form class="ui fluid form">
@@ -705,6 +706,7 @@
             $(".cb_y2_axis_actf_box").hide();
         }
 
+
         ////////////////////////////////////////////////////////
         // Handler functions
         ////////////////////////////////////////////////////////
@@ -771,6 +773,7 @@
         let spanY2ColText = document.getElementById("span_y_col_text");
 
         function onGraphChange(e) {
+            $("input:checkbox[id='cb_is_grouped']").prop("checked", false);
             $("#trendline_value").hide();
             graphType = e.value;
 
