@@ -39,8 +39,20 @@
         <!-- DataFrame's table will be shown -->
         <div class="Container_layout">
             <div class="DanfoContainer">
-                <h1 class="">데이터 조작 공간</h1>
-
+                <h1 class="">
+                    데이터 조작 공간
+                </h1>
+                <form class="ui fluid form">
+                    <div class="cb_is_grouped_box" style="display: inline-block; text-align: left;">
+                        <input type="checkbox" id="cb_is_grouped" onchange="onGroupedCheckBoxChange(this);" />
+                        <label id="lb_is_grouped" for="cb_is_grouped">X축 기준 집계 (Aggregate)</label>
+                        <br />
+                        <select id="select_aggregate_method" onchange="onAggregateCheckBoxChange();">
+                            <option value="mean">평균</option>
+                            <option value="max">최대값</option>
+                        </select>
+                    </div>
+                </form>
                 <!-- DataFrame Controls -->
                 <form class="ui fluid form">
 
@@ -73,22 +85,21 @@
                             class="check circle white icon"></i></button>
                     <button type="button" class="ui icon button red" onclick="resetDataFrame();"><i
                             class="trash alternate outline white icon"></i></button>
-                    <input type="checkbox" id="cb_is_grouped" onchange="onGroupedCheckBoxChange(this);" />
-                    <label id="lb_is_grouped" for="cb_is_grouped">X축 기준 집계 (Aggregate)</label>
-                    <select id="select_aggregate_method" onchange="onAggregateCheckBoxChange();">
-                        <option value="mean">평균</option>
-                        <option value="max">최대값</option>
-                    </select>
+
                 </form>
                 <div id="danfo_dataframe"></div>
             </div>
 
             <!-- Plotly's Graph will be shown -->
             <div class="PlotlyContainer">
-                <h1>Plotly.js Test</h1>
+                <h1>그래프 조작 공간</h1>
 
                 <!-- Graph Controls -->
                 <form class="ui fluid form">
+                    <div class="trend_line">
+                        <button type="button" class="ui button" onclick="makeSLGraphWithTrendline();">추세선 그리기</button>
+                        <button type="button" class="ui button" onclick="makeScatterAndLineGraph();">추세선 초기화</button>
+                    </div>
                     <select onchange="onGraphChange(this);" id="sb_graph_select">
                         <option value="lines" selected>선 그래프</option>
                         <option value="markers">산점도 그래프</option>
@@ -97,10 +108,6 @@
                         <option value="combo">콤보 그래프</option>
                     </select>
                     <div class="PlotlyGraph" id="plotly_graph"></div>
-                    <div class="trend_line">
-                        <button type="button" class="ui button" onclick="makeSLGraphWithTrendline();">추세선 그리기</button>
-                        <button type="button" class="ui button" onclick="makeScatterAndLineGraph();">추세선 초기화</button>
-                    </div>
                     <div id="trendline_value">
                         <p id="trendline_x"></p>
                         <p id="trendline_y"></p>
@@ -135,14 +142,24 @@
 
         let isGrouped = 0;
 
+        let setResize;
+
         ////////////////////////////////////////////////////////
         // Page Initialize
         ////////////////////////////////////////////////////////
+        $(window).resize(function () {
+            clearTimeout(setResize)
+            setResize = setTimeout(() => {
+                $("#danfo_dataframe").html("")
+                df.plot("danfo_dataframe").table();
+
+            }, 100);
+        })
         $(document).ready(function () {
             // Initialize the graph
             $("#sb_graph_select").find("option").eq(0).prop("selected", true);
             $("input:checkbox[id='cb_is_grouped']").prop("checked", false);
-            $("#cb_is_grouped, #lb_is_grouped").hide();
+            // $("#cb_is_grouped, #lb_is_grouped").hide();
             $("#select_aggregate_method").hide();
             hideDfY2Col();
             graphType = "lines";
@@ -169,7 +186,7 @@
         function initializeDf(result) {
             // Dataframe init and print on html
             df = result;
-            df.plot("danfo_dataframe").table({ layout: { height: 800 } });
+            df.plot("danfo_dataframe").table({ layout: { autosize: true } });
 
             // Create select tag's options using columns of DataFrame
             let selectXCol = document.getElementById("select_x_col");
@@ -467,7 +484,6 @@
 
         // Set new DataFrame
         async function makeDataFrame() {
-
             let isSelectBoxXColVisible = $("#sb_x_col").is(":visible");
 
             // When X col and Y col are activated.
@@ -502,6 +518,8 @@
                 } else if (graphType == "combo") {
                     await makeComboGraph();
                 }
+
+
             } else { // When Only one Columns
                 if (!dfYCol || dfYCol == "none") {
                     alert("컬럼을 선택하세요.")
@@ -545,7 +563,7 @@
 
         function hideChIsGrouped() {
             isGrouped = 0; // Initialize before being hidden
-            $("#cb_is_grouped, #lb_is_grouped").hide();
+            $(".cb_is_grouped_box").hide();
         }
 
         ////////////////////////////////////////////////////////
@@ -633,14 +651,14 @@
                 spanY2ColText.innerText = "Y Column";
                 hideDfY2Col();
                 $("#sb_x_col").show();
-                $("#cb_is_grouped, #lb_is_grouped").show();
+                $(".cb_is_grouped_box").show();
                 makeBarGraph();
             } else if (graphType == "combo") {
                 resetGraph();
                 spanY2ColText.innerText = "Y Column (for Bar Plot)"
                 $("#sb_y2_col").show();
                 $("#sb_x_col").show();
-                $("#cb_is_grouped, #lb_is_grouped").show();
+                $(".cb_is_grouped_box").show();
             }
 
         }

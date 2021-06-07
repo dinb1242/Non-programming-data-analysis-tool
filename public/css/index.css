@@ -21,11 +21,24 @@
 
 
 
-
+.DanfoContainer> h1 {
+    position: relative;
+}
 .cb_is_grouped_box {
-    position: absolute;
-    right: 0;
-    top: 0;
+    display: none;
+    margin-bottom: 2rem;
+
+}
+
+.cb_is_grouped_box > * {
+    vertical-align: middle;
+}
+
+#select_aggregate_method {
+}
+
+.trend_line {
+    margin-bottom: 10px;
 }
 
 /* Plotly CSS */
