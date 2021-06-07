@@ -227,7 +227,7 @@
         function calcMaxAgainstX(uniqueXData, yCol){
             let tempArr = []
             uniqueXData.forEach(label => {
-                tempArr.push( Math.max.apply(null, df.query({ column: dfXCol, is: "==", to: label })[yCol].values) )
+                tempArr.push( Math.max.apply(null, reshapeTo1d(Array.from(df.query({ column: dfXCol, is: "==", to: label }).loc({columns: [yCol]}).values)) ) )
             })
 
             return tempArr;
@@ -236,7 +236,7 @@
         function calcMeanAgainstX(uniqueXData, yCol){
             let tempArr = []
             uniqueXData.forEach(label => {
-                tempArr.push( df.query({ column: dfXCol, is: "==", to: label })[yCol].mean());
+                tempArr.push( df.query({ column: dfXCol, is: "==", to: label }).loc({columns: [yCol]}).mean().values[0]);
             })
 
             return tempArr;
@@ -416,7 +416,7 @@
                 }
                 
                 trace0.x = uniqueXData;
-                trace0.y = maxYData;
+                trace0.y = yDataForBar;
 
                 console.log(trace0.x, trace0.y);
             }
